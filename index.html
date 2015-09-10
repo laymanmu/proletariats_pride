@@ -1,0 +1,156 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"></meta>
+  <title>proletariats pride</title>
+  <link rel="stylesheet" type="text/css" href="proletariats_pride.css"></link>
+</head>
+
+<body>
+<div id="app">
+  <table id="timeclock">
+    <tr>
+      <th class="shift">shift begin</th>
+      <th class="lunch">lunch begin</th>
+      <th class="lunch">lunch end</th>
+      <th class="shift">shift end</th>
+    </tr>
+    <tr>
+      <td class="shift"><input id="shiftBegin"></input></td>
+      <td class="lunch"><input id="lunchBegin"></input></td>
+      <td class="lunch"><input id="lunchEnd"></input></td>
+      <td class="shift"><input id="shiftEnd"></input></td>
+    </tr>
+  </table><!-- timeclock -->
+  <table id="stats">
+    <tr class="lunch"><th>Lunch target:</th><td id="lunchTarget"></td></tr>
+    <tr class="lunch"><th>Lunch length:</th><td id="lunchLength"></td></tr>
+    <tr><th colspan=2><hr /></th></tr>
+    <tr class="shift"><th>Shift target:</th><td id="shiftTarget"></td></tr>
+    <tr class="shift"><th>Shift length:</th><td id="shiftLength"></td></tr>
+  </table><!-- stats -->
+</div><!-- app -->
+</body>
+
+<script>
+var App = {
+  init: function() {
+    this.times = [null,null,null,null]; //<- [shiftBegin,lunchBegin,lunchEnd,shiftEnd]
+    this.getElements();
+    this.setElementEvents();
+  },
+  updateInterface: function() {
+    App.setLunchTarget();
+    App.setLunchLength();
+    App.setShiftTarget();
+    App.setShiftLength();
+  },
+
+  // setters:
+  setElementEvents: function() {
+    function handler(timeIndex, element) {
+      var timeString = element.value;
+      App.times[timeIndex] = App.parseTime(timeString);
+      App.updateInterface();
+    };
+    this.shiftBegin.oninput = function() { handler(0, App.shiftBegin); };
+    this.lunchBegin.oninput = function() { handler(1, App.lunchBegin); };
+    this.lunchEnd.oninput   = function() { handler(2, App.lunchEnd);   };
+    this.shiftEnd.oninput   = function() { handler(3, App.shiftEnd);   };
+  },
+  setLunchTarget: function() {
+    var lunchTarget = App.getLunchTarget();
+    if (lunchTarget != null) {
+      App.lunchTarget.innerHTML = App.dateTo24HourTimeString(lunchTarget);
+    }
+  },
+  setLunchLength: function() {
+    var lunchLength = App.getLunchLength();
+    if (lunchLength != null) {
+      App.lunchLength.innerHTML =  lunchLength + " mins";
+    }
+  },
+  setShiftTarget: function() {
+    var shiftBegin = App.times[0];
+    if (shiftBegin != null) {
+      var shiftTarget = new Date(shiftBegin.getTime());
+      shiftTarget.setHours(shiftBegin.getHours()+8);
+      var lunchLength = App.getLunchLength();
+      if (lunchLength != null) {
+        shiftTarget.setMinutes(shiftTarget.getMinutes()+lunchLength);
+      }
+      App.shiftTarget.innerHTML = App.dateTo24HourTimeString(shiftTarget);
+    }
+  },
+  setShiftLength: function() {
+    var shiftBegin    = App.times[0];
+    var shiftEnd      = App.times[3];
+    var lunchLengthMS = App.getLunchLength() * 60 * 1000;
+    if (shiftBegin!=null && shiftEnd!=null && lunchLength!=null) {
+      var ms        = shiftEnd - shiftBegin - lunchLengthMS;
+      var totalMins = ms / 1000 / 60;
+      var hours     = Math.floor(totalMins / 60);
+      var minutes   = totalMins % 60;
+      hours   = hours  <10 ? "0"+hours   : hours;
+      minutes = minutes<10 ? "0"+minutes : minutes;
+      App.shiftLength.innerHTML = hours +" hours "+ minutes +" mins";
+    }
+  },
+
+  // getters:
+  getElements: function() {
+    this.shiftBegin  = document.getElementById('shiftBegin');
+    this.shiftEnd    = document.getElementById('shiftEnd');
+    this.shiftTarget = document.getElementById('shiftTarget');
+    this.shiftLength = document.getElementById('shiftLength');
+    this.lunchBegin  = document.getElementById('lunchBegin');
+    this.lunchEnd    = document.getElementById('lunchEnd');
+    this.lunchTarget = document.getElementById('lunchTarget');
+    this.lunchLength = document.getElementById('lunchLength');
+  },
+  getLunchLength: function() {
+    var lunchBegin  = App.times[1];
+    var lunchEnd    = App.times[2];
+    if (lunchBegin != null && lunchEnd != null) {
+      var ms   = lunchEnd - lunchBegin;
+      var mins = ms / 1000 / 60;
+      return mins>0 ? mins : null;
+    }
+    return null;
+  },
+  getLunchTarget: function() {
+    var lunchBegin = App.times[1];
+    if (lunchBegin != null) {
+      var lunchTarget = new Date(lunchBegin.getTime());
+      lunchTarget.setMinutes(lunchTarget.getMinutes()+30);
+      return lunchTarget;
+    }
+    return null;
+  },
+
+  // helpers:
+  parseTime: function(timeString) {
+    if (timeString == '') return null;
+    // must have hours, can have minutes:
+    var time = timeString.match(/(\d+)(:(\d\d))?/);
+    if (time == null) return null;
+    var hours = parseInt(time[1],10);
+    var date  =  new Date();
+    date.setHours(hours);
+    date.setMinutes(parseInt(time[3],10) || 0);
+    date.setSeconds(0, 0);
+    return date;
+  },
+  dateTo24HourTimeString: function(date) {
+    function zpad(num) {
+      return num.toString().length<2 ?  "0"+num : num;
+    }
+    var hours = date.getHours();
+    var mins  = date.getMinutes();
+    return zpad(hours) +":"+ zpad(mins);
+  }
+};
+App.init();
+</script>
+
+</html>
