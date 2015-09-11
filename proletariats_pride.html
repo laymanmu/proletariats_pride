@@ -104,7 +104,7 @@ var App = {
     // set all of the events for the above dom elements:
     function handler(timeIndex, element) {
       var timeString       = element.value;
-      App.times[timeIndex] = App.parseTime(timeString);
+      App.times[timeIndex] = App.timeStringToDate(timeString);
       App.setLunchTarget();
       App.setLunchLength();
       App.setShiftTarget();
@@ -120,7 +120,7 @@ var App = {
   setLunchTarget: function() {
     var lunchTarget = App.getLunchTarget();
     if (lunchTarget != null) {
-      App.lunchTarget.innerHTML = App.dateTo24HourTimeString(lunchTarget);
+      App.lunchTarget.innerHTML = App.dateToTimeString(lunchTarget);
     }
   },
   setLunchLength: function() {
@@ -138,7 +138,7 @@ var App = {
       if (lunchLength != null) {
         shiftTarget.setMinutes(shiftTarget.getMinutes()+lunchLength);
       }
-      App.shiftTarget.innerHTML = App.dateTo24HourTimeString(shiftTarget);
+      App.shiftTarget.innerHTML = App.dateToTimeString(shiftTarget);
     }
   },
   setShiftLength: function() {
@@ -178,7 +178,7 @@ var App = {
   },
 
   // helpers:
-  parseTime: function(timeString) {
+  timeStringToDate: function(timeString) {
     if (timeString == '') return null;
     // must have hours, can have minutes:
     var time = timeString.match(/(\d+)(:(\d\d))?/);
@@ -190,7 +190,7 @@ var App = {
     date.setSeconds(0, 0);
     return date;
   },
-  dateTo24HourTimeString: function(date) {
+  dateToTimeString: function(date) {
     function zpad(num) {
       return num.toString().length<2 ?  "0"+num : num;
     }
